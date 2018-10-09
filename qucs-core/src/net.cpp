@@ -330,31 +330,37 @@ void net::orderAnalysis (void) {
 	    }
 	  }
 	}
-      }
-      // sort the sub-analysis of each parent
-      for (auto *a: *actions) {
-	sortChildAnalyses (a);
+        // sort the sub-analysis of each parent
+        for (auto *a: *actions) {
+          sortChildAnalyses (a);
+        }
       }
     }
   } while (parent != NULL);
 
   // sort the parent analyses
-  parent = new analysis ();
-  parent->setAnalysis (actions);
-  sortChildAnalyses (parent);
-  actions = new ptrlist<analysis> (*(parent->getAnalysis ()));
-  delete parent;
+  if (actions != nullptr) {
+    parent = new analysis ();
+    parent->setAnalysis (actions);
+    sortChildAnalyses (parent);
+    actions = new ptrlist<analysis> (*(parent->getAnalysis ()));
+    delete parent;
+  }
 }
 
 // This function sorts the analyses of the given parent analysis.
 void net::sortChildAnalyses (analysis * parent) {
   ptrlist<analysis> * alist = parent->getAnalysis ();
   if (alist != nullptr) {
-    for (auto *a: *alist) {
-      if (a->getType () == ANALYSIS_DC
-	  || containsAnalysis (a, ANALYSIS_DC)) {
-	parent->delAnalysis (a);
-	parent->addAnalysis (a);
+    auto it = alist->begin ();
+    const auto end = alist->end ();
+    while(it != end) {
+      if ((*it)->getType () == ANALYSIS_DC
+          || containsAnalysis (*it, ANALYSIS_DC)) {
+        alist->push_front (*it);
+        it = alist->erase (it);
+      } else {
+        ++it;
       }
     }
   }
